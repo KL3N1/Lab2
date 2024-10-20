@@ -6,107 +6,154 @@
 #define MAX_DISHES 10
 #define MAX_ORDERS 5
 
-// 1. Структура Dish (Блюдо)
-typedef struct {
+// 1. Класс Dish (Блюдо)
+class Dish {
+private:
     char name[50];
     float price;
     int quantity;
-} Dish;
 
-// 2. Структура Menu (Меню)
-typedef struct {
-    Dish dishes[MAX_DISHES];
+public:
+    // Конструктор
+    Dish(const char* dish_name, float dish_price, int dish_quantity) {
+        strcpy_s(name, dish_name);
+        price = dish_price;
+        quantity = dish_quantity;
+    }
+
+    // Метод для вывода информации о блюде
+    void print() const {
+        printf("Блюдо: %s, Цена: %.2f, Количество порций: %d\n", name, price, quantity);
+    }
+
+    // Доступ к приватным данным, если нужно
+    float getPrice() const { return price; }
+    int getQuantity() const { return quantity; }
+    const char* getName() const { return name; }
+};
+
+// 2. Класс Menu (Меню)
+class Menu {
+private:
+    Dish* dishes[MAX_DISHES];
     int dish_count;
-} Menu;
 
-// 3. Структура Client (Клиент)
-typedef struct {
+public:
+    // Конструктор
+    Menu() {
+        dish_count = 0;
+    }
+
+    // Метод для добавления блюда в меню
+    void addDish(Dish* dish) {
+        if (dish_count < MAX_DISHES) {
+            dishes[dish_count] = dish;
+            dish_count++;
+        }
+        else {
+            printf("Меню переполнено!\n");
+        }
+    }
+
+    // Метод для вывода меню
+    void print() const {
+        printf("Меню:\n");
+        for (int i = 0; i < dish_count; i++) {
+            dishes[i]->print();
+        }
+        printf("\n");
+    }
+
+    // Получение блюда по индексу
+    Dish* getDish(int index) const {
+        if (index >= 0 && index < dish_count) {
+            return dishes[index];
+        }
+        return NULL;
+    }
+};
+
+
+// 3. Класс Client (Клиент)
+class Client {
+private:
     char name[50];
     char phone[15];
-} Client;
 
-// 4. Структура Employee (Сотрудник)
-typedef struct {
+public:
+    // Конструктор
+    Client(const char* client_name, const char* client_phone) {
+        strcpy_s(name, client_name);
+        strcpy_s(phone, client_phone);
+    }
+
+    // Метод для вывода информации о клиенте
+    void print() const {
+        printf("Клиент: %s, Телефон: %s\n", name, phone);
+    }
+
+    const char* getName() const { return name; }
+};
+
+
+// 4. Класс Employee (Сотрудник)
+class Employee {
+private:
     char name[50];
     int id;
-} Employee;
 
-// 5. Структура Order (Заказ)
-typedef struct {
+public:
+    // Конструктор
+    Employee(const char* employee_name, int employee_id) {
+        strcpy_s(name, employee_name);
+        id = employee_id;
+    }
+
+    // Метод для вывода информации о сотруднике
+    void print() const {
+        printf("Официант: %s, ID: %d\n", name, id);
+    }
+
+    const char* getName() const { return name; }
+};
+
+
+// 5. Класс Order (Заказ)
+class Order {
+private:
     Client client;
     Employee employee;
-    Dish ordered_dishes[MAX_DISHES];
+    Dish* ordered_dishes[MAX_ORDERS];
     int order_count;
     float total_price;
-} Order;
 
-void init_menu(Menu* menu) {
-    menu->dish_count = 0; // Начальное количество блюд 0
-}
+public:
+    // Конструктор
+    Order(const Client& c, const Employee& e) : client(c), employee(e), order_count(0), total_price(0.0) {}
 
-void add_dish_to_menu(Menu* menu, const char* name, float price, int quantity) {
-    if (menu->dish_count < MAX_DISHES) {
-        strcpy_s(menu->dishes[menu->dish_count].name, name);
-        menu->dishes[menu->dish_count].price = price;
-        menu->dishes[menu->dish_count].quantity = quantity;
-        menu->dish_count++;
+    // Метод для добавления блюда в заказ
+    void addDish(Dish* dish) {
+        if (order_count < MAX_ORDERS) {
+            ordered_dishes[order_count] = dish;
+            total_price += dish->getPrice() * dish->getQuantity();
+            order_count++;
+        }
+        else {
+            printf("Заказ переполнен!\n");
+        }
     }
-    else {
-        printf("Меню переполнено!\n");
-    }
-}
 
-void print_menu(Menu* menu) {
-    printf("Меню:\n");
-    for (int i = 0; i < menu->dish_count; i++) {
-        printf("Блюдо: %s, Цена: %.2f, Количество порций: %d\n",
-            menu->dishes[i].name, menu->dishes[i].price, menu->dishes[i].quantity);
+    // Метод для вывода заказа
+    void print() const {
+        printf("Заказ клиента: %s\n", client.getName());
+        printf("Обслуживает официант: %s\n", employee.getName());
+        printf("Блюда в заказе:\n");
+        for (int i = 0; i < order_count; i++) {
+            ordered_dishes[i]->print();
+        }
+        printf("Общая стоимость заказа: %.2f\n\n", total_price);
     }
-    printf("\n");
-}
-
-void init_order(Order* order, Client client, Employee employee) {
-    order->client = client;
-    order->employee = employee;
-    order->order_count = 0;
-    order->total_price = 0.0;
-}
-
-void add_dish_to_order(Order* order, Dish dish) {
-    if (order->order_count < MAX_DISHES) {
-        order->ordered_dishes[order->order_count] = dish;
-        order->total_price += dish.price * dish.quantity;
-        order->order_count++;
-    }
-    else {
-        printf("Заказ переполнен!\n");
-    }
-}
-
-void print_order(Order* order) {
-    printf("Заказ клиента: %s\n", order->client.name);
-    printf("Обслуживает официант: %s\n", order->employee.name);
-    printf("Блюда в заказе:\n");
-    for (int i = 0; i < order->order_count; i++) {
-        printf("Блюдо: %s, Количество: %d, Цена: %.2f\n",
-            order->ordered_dishes[i].name,
-            order->ordered_dishes[i].quantity,
-            order->ordered_dishes[i].price);
-    }
-    printf("Общая стоимость заказа: %.2f\n\n", order->total_price);
-}
-
-Order* create_dynamic_order(Client client, Employee employee) {
-    Order* order = (Order*)malloc(sizeof(Order));
-    if (order != NULL) {
-        init_order(order, client, employee);
-    }
-    return order;
-}
-
-void free_order(Order* order) {
-    free(order);  // Освобождаем память
-}
+};
 
 int main() {
 
@@ -114,31 +161,31 @@ int main() {
 
     // Инициализируем меню
     Menu menu;
-    init_menu(&menu);
-    add_dish_to_menu(&menu, "Борщ", 250.0, 1);
-    add_dish_to_menu(&menu, "Пельмени", 300.0, 1);
-    print_menu(&menu);
+    Dish* borsh = new Dish("Борщ", 250.0, 1);
+    Dish* pelmeni = new Dish("Пельмени", 300.0, 1);
+    menu.addDish(borsh);
+    menu.addDish(pelmeni);
+    menu.print();
 
     // Создание клиента и официанта
-    Client client = { "Иван Иванов", "89005555555" };
-    Employee employee = { "Сергей Петров", 101 };
+    Client client("Иван Иванов", "89005555555");
+    Employee employee("Сергей Петров", 101);
 
     // Инициализация заказа
-    Order order;
-    init_order(&order, client, employee);
-    add_dish_to_order(&order, menu.dishes[0]);  // Борщ
-    add_dish_to_order(&order, menu.dishes[1]);  // Пельмени
+    Order order(client, employee);
+    order.addDish(menu.getDish(0));  // Борщ
+    order.addDish(menu.getDish(1));  // Пельмени
+    order.print();
 
-    // Печать заказа
-    print_order(&order);
+    // Работа с динамическим массивом заказов
+    Order* dynamic_order = new Order(client, employee);
+    dynamic_order->addDish(menu.getDish(0));  // Борщ
+    dynamic_order->print();
 
-    // Работа с динамической памятью
-    Order* dyn_order = create_dynamic_order(client, employee);
-    add_dish_to_order(dyn_order, menu.dishes[0]);  // Борщ
-    print_order(dyn_order);
-
-    // Освобождаем память
-    free_order(dyn_order);
+    // Удаление динамических объектов
+    delete dynamic_order;
+    delete borsh;
+    delete pelmeni;
 
     return 0;
 }
